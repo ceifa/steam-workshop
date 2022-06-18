@@ -1,0 +1,25 @@
+{
+    "name": "steam-ws",
+    "version": "0.0.1",
+    "description": "",
+    "main": "index.js",
+    "bin": {
+        "steamws": "bin/steamworkshop"
+    },
+    "type": "commonjs",
+    "author": "ceifa",
+    "repository": "github:ceifa/steam-workshop",
+    "license": "ISC",
+    "keywords": [
+        "workshop",
+        "steam",
+        "gmod",
+        "gmad",
+        "garrysmod",
+        "garry"
+    ],
+    "dependencies": {
+        "node-fetch": "^2.6.7",
+        "steamworks.js": "0.0.18"
+    }
+}
