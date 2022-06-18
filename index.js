@@ -58,8 +58,6 @@ const download = async (itemId, outputPath) => {
     console.log('Download finished');
     const installinfo = client.workshop.installInfo(itemId)
 
-    client.shutdown()
-
     const files = await fs.promises.readdir(installinfo.folder)
     const file = path.resolve(installinfo.folder, files[0])
     if (file.endsWith('.gma')) {
