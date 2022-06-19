@@ -4,8 +4,18 @@ const steamworks = require('steamworks.js');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
+const chalk = require('chalk');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const slug = (str) => {
+    return str
+        .normalize('NFKD')
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/[-\s]+/g, '-');
+}
 
 const getAppIdFromWorkshopItemId = async (itemId) => {
     const params = new URLSearchParams({
@@ -29,40 +39,55 @@ const getAppIdFromWorkshopItemId = async (itemId) => {
         throw new Error(`This workshop item was not found: ${response.result}`);
     }
 
-    const { publishedfiledetails: [{ consumer_app_id: appId }] } = response;
-    return appId;
+    const { publishedfiledetails: [{ consumer_app_id: appId, title }] } = response;
+    return { appId, title };
 }
 
 const download = async (itemId, outputPath) => {
-    const appId = await getAppIdFromWorkshopItemId(itemId);
+    const { appId, title } = await getAppIdFromWorkshopItemId(itemId);
+    outputPath = path.join(outputPath, `${itemId}-${slug(title)}`);
     const client = steamworks.init(appId);
 
     const state = client.workshop.state(itemId)
     if (state & 4) {
         console.log('Item is already installed');
     } else {
-        console.log('Item is not installed, downloading it...');
-        client.workshop.download(itemId);
+        console.log('Waiting for steam to start download...');
+        client.workshop.download(itemId, true);
 
         while (true) {
-            const downloadinfo = client.workshop.downloadInfo(itemId)
-            if (downloadinfo.current >= downloadinfo.total) {
+            const state = client.workshop.state(itemId)
+            if (state & 4) {
+                console.log('\nDownload finished');
                 break;
+            } else if (state & 16) {
+                const downloadinfo = client.workshop.downloadInfo(itemId)
+                const progress = Math.floor(Number(downloadinfo.current) / Number(downloadinfo.total) * 100);
+                const progressBar = '='.repeat(Math.floor(progress / 2));
+                const progressBarRemainder = '-'.repeat(Math.floor((100 - progress) / 2));
+                process.stdout.write(chalk.yellow(`[${progressBar}${progressBarRemainder}] ${progress}% (${downloadinfo.current}/${downloadinfo.total})\r`));
             }
 
-            console.log(`Downloading ${downloadinfo.current}/${downloadinfo.total}`);
             await sleep(100);
         }
     }
 
-    console.log('Download finished');
     const installinfo = client.workshop.installInfo(itemId)
 
     const files = await fs.promises.readdir(installinfo.folder)
     const file = path.resolve(installinfo.folder, files[0])
     if (file.endsWith('.gma')) {
-        console.log('Extracting GMA...');
-        await extractGma(file, outputPath)
+        let completed = false;
+        extractGma(file, outputPath).then(() => {
+            completed = true;
+        })
+
+        process.stdout.write('Extracting GMA');
+        while (!completed) {
+            process.stdout.write('.');
+            await sleep(200);
+        }
+        process.stdout.write('\n');
     } else {
         await fs.promises.copyFile(installinfo.folder, outputPath);
     }

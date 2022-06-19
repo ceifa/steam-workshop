@@ -1,10 +1,10 @@
 {
     "name": "steam-ws",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "",
     "main": "index.js",
     "bin": {
-        "steamws": "bin/steamworkshop"
+        "steam-ws": "bin/steamworkshop"
     },
     "type": "commonjs",
     "author": "ceifa",
@@ -19,7 +19,8 @@
         "garry"
     ],
     "dependencies": {
-        "node-fetch": "^2.6.7",
+        "chalk": "4.1.2",
+        "node-fetch": "2.6.7",
         "steamworks.js": "0.0.18"
     }
 }
