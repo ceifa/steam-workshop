@@ -5,6 +5,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
+const lzma = require('lzma-native');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -65,7 +66,7 @@ const download = async (itemId, outputPath) => {
                 const progress = Math.floor(Number(downloadinfo.current) / Number(downloadinfo.total) * 100);
                 const progressBar = '='.repeat(Math.floor(progress / 2));
                 const progressBarRemainder = '-'.repeat(Math.floor((100 - progress) / 2));
-                process.stdout.write(chalk.yellow(`[${progressBar}${progressBarRemainder}] ${progress}% (${downloadinfo.current}/${downloadinfo.total})\r`));
+                process.stdout.write(chalk.yellow(`[${progressBar}${progressBarRemainder}] ${progress}% (${downloadinfo.current}/${downloadinfo.total} bytes)\r`));
             }
 
             await sleep(100);
@@ -74,11 +75,23 @@ const download = async (itemId, outputPath) => {
 
     const installinfo = client.workshop.installInfo(itemId)
 
-    const files = await fs.promises.readdir(installinfo.folder)
-    const file = path.resolve(installinfo.folder, files[0])
-    if (file.endsWith('.gma')) {
+    let gmaBuffer = undefined
+    if (installinfo.folder.endsWith('.bin')) {
+        const bufferPromise = new Promise(async (resolve, reject) => {
+            lzma.decompress(await fs.promises.readFile(installinfo.folder), undefined, resolve);
+        })
+        gmaBuffer = await bufferPromise;
+    } else {
+        const files = await fs.promises.readdir(installinfo.folder)
+        const file = path.resolve(installinfo.folder, files[0])
+        if (file.endsWith('.gma')) {
+            gmaBuffer = await fs.promises.readFile(file)
+        }
+    }
+
+    if (gmaBuffer) {
         let completed = false;
-        extractGma(file, outputPath).then(() => {
+        extractGma(gmaBuffer, outputPath).then(() => {
             completed = true;
         })
 

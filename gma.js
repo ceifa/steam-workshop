@@ -8,9 +8,8 @@ const mkdirp = async (dir) => {
     await fs.promises.mkdir(dir);
 }
 
-const extractGma = async (gmaPath, outputPath) => {
-    const buffer = await fs.promises.readFile(gmaPath);
-
+/** @param buffer {Buffer} */
+const extractGma = async (buffer, outputPath) => {
     let pointer = 4 + 1 + 8 + 8;
     const getStringSize = () => {
         for (var i = pointer; i < buffer.length - 1; i++) {
@@ -36,7 +35,7 @@ const extractGma = async (gmaPath, outputPath) => {
     pointer += 4;
 
     const files = []
-    while (buffer.readUIntLE(pointer, 4) !== 0) {
+    while (buffer.length >= pointer + 4 && buffer.readUIntLE(pointer, 4) !== 0) {
         pointer += 4;
         const size = getStringSize();
         const file = buffer.slice(pointer, pointer + size - 1).toString('utf-8');

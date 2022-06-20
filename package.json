@@ -1,6 +1,6 @@
 {
     "name": "steam-ws",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "",
     "main": "index.js",
     "bin": {
@@ -20,6 +20,7 @@
     ],
     "dependencies": {
         "chalk": "4.1.2",
+        "lzma-native": "8.0.6",
         "node-fetch": "2.6.7",
         "steamworks.js": "0.0.18"
     }
