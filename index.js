@@ -50,9 +50,13 @@ const download = async (itemId, outputPath) => {
     const client = steamworks.init(appId);
 
     const state = client.workshop.state(itemId)
-    if (state & 4) {
+    if (state & 4 && !(state & 8)) {
         console.log('Item is already installed');
     } else {
+        if (state & 8) {
+            console.log('Item is already installed but needs to be updated');
+        }
+
         console.log('Waiting for steam to start download...');
         client.workshop.download(itemId, true);
 
@@ -77,7 +81,7 @@ const download = async (itemId, outputPath) => {
 
     let gmaBuffer = undefined
     if (installinfo.folder.endsWith('.bin')) {
-        const bufferPromise = new Promise(async (resolve, reject) => {
+        const bufferPromise = new Promise(async (resolve) => {
             lzma.decompress(await fs.promises.readFile(installinfo.folder), undefined, resolve);
         })
         gmaBuffer = await bufferPromise;
@@ -105,7 +109,7 @@ const download = async (itemId, outputPath) => {
         await fs.promises.copyFile(installinfo.folder, outputPath);
     }
 
-    console.log('Done');
+    console.log(chalk.green('Done'));
 }
 
 module.exports = { download };

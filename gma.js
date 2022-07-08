@@ -1,4 +1,5 @@
 const fs = require('fs');
+const lzma = require('lzma-native');
 const path = require('path');
 
 const mkdirp = async (dir) => {
@@ -43,16 +44,22 @@ const extractGma = async (buffer, outputPath) => {
 
         const fsize = buffer.readBigInt64LE(pointer);
         pointer += 8;
+
+        const crc = buffer.readUIntLE(pointer, 4);
         pointer += 4;
 
-        files.push({ file, size: fsize });
+        files.push({ file, size: fsize, crc });
     }
 
     pointer += 4;
 
     for (const file of files) {
-        const content = buffer.slice(pointer, pointer + Number(file.size)).toString('utf-8');
+        const content = buffer.slice(pointer, pointer + Number(file.size));
         pointer += Number(file.size);
+
+        if (file.crc !== lzma.crc32(content)) {
+            throw new Error(`CRC32 mismatch for ${file.file}`);
+        }
 
         await mkdirp(path.dirname(path.resolve(outputPath, file.file)), { resursive: true });
         await fs.promises.writeFile(path.resolve(outputPath, file.file), content);

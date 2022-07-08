@@ -1,4 +1,6 @@
-# steam-ws - Download steam workshop items with a command
+# steam-ws - Easy workshop items download
+
+Download any workshop item with a simple command, it also extract it if needed, like `gma` and `bin` files.
 
 ## Installation
 
