@@ -3,10 +3,9 @@ const lzma = require('lzma-native');
 const path = require('path');
 
 const mkdirp = async (dir) => {
-    if (fs.existsSync(dir)) { return; }
-    const dirname = path.dirname(dir)
-    await mkdirp(dirname);
-    await fs.promises.mkdir(dir);
+    try {
+        await fs.promises.mkdir(dir, { recursive: true });
+    } catch { }
 }
 
 /** @param buffer {Buffer} */
@@ -61,7 +60,7 @@ const extractGma = async (buffer, outputPath) => {
             throw new Error(`CRC32 mismatch for ${file.file}`);
         }
 
-        await mkdirp(path.dirname(path.resolve(outputPath, file.file)), { resursive: true });
+        await mkdirp(path.dirname(path.resolve(outputPath, file.file)));
         await fs.promises.writeFile(path.resolve(outputPath, file.file), content);
     }
 }
