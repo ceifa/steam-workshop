@@ -109,7 +109,8 @@ const download = async (itemId, outputPath) => {
         await fs.promises.copyFile(installinfo.folder, outputPath);
     }
 
-    console.log(chalk.green('Done'));
+    console.log(chalk.green('Done!'));
+    console.log(`${chalk.blueBright(title)} downloaded to ${chalk.blueBright(outputPath)}`);
 }
 
 module.exports = { download };
